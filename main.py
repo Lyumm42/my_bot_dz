@@ -10,16 +10,31 @@ from dotenv import load_dotenv
 
 from states import Survey
 from keyboards import reply_kb, inline_kb
+from db import Database
+
 load_dotenv()
 
 bot_token=os.getenv("TOKEN")
 
 bot = Bot(token=bot_token)
+db = Database(
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
+    database=os.getenv("DB_NAME")
+)
 router = Router()
+
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer(f"Hello {message.from_user.first_name}")
+    user = await db.check_user(message.from_user.id)
+    if not user:
+        await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name,
+                          message.from_user.last_name)
+        await message.answer(f"Hello {message.from_user.first_name}, Ты добавлен в Базу Данных")
+    else:
+        await message.answer(f"С возвращением {message.from_user.username}")
 
 
 @router.message(Command(commands="help"))
@@ -62,6 +77,8 @@ async def process_color(message: Message, state: FSMContext):
                     Отлично !!!\n Спасибо за пройденный опрос!!!
                     Ваш любимый цвет {color}\nВам {age} лет\nВас зовут {name}"""
     await message.answer(answer_text)
+    user_id = await db.check_user(message.from_user.id)
+    await db.add_survey(user_id["id"], age, color)
     await state.clear()
 
 
@@ -90,9 +107,13 @@ async def reply_image(message: Message):
 
 async def main():
     print("Starting bot...")
+    await db.connect()
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await db.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(main())
