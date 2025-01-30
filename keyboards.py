@@ -15,5 +15,7 @@ inline_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text='GOOGLE', url='https://google.com')],
         [InlineKeyboardButton(text='YOUTUBE', url='https://www.youtube.com')],
+        [InlineKeyboardButton(text='Цитата', callback_data='quote')],
+        [InlineKeyboardButton(text='Погода', callback_data='weather')],
     ]
 )

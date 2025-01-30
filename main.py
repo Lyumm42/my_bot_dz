@@ -5,9 +5,10 @@ from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from dotenv import load_dotenv
 
+from services import kanye_quote, get_weather
 from states import Survey
 from keyboards import reply_kb, inline_kb
 from db import Database
@@ -82,9 +83,18 @@ async def process_color(message: Message, state: FSMContext):
     await state.clear()
 
 
-# @router.message(F.text == "Hello")
-# async def reply_hello(message: Message):
-#     await message.reply(f"HIII !!!")
+@router.callback_query(F.data=='quote')
+async def callback_quote(call: CallbackQuery):
+    quote = await kanye_quote()
+    await call.message.answer(quote)
+    await call.answer()
+
+
+@router.callback_query(F.data=='weather')
+async def callback_quote(call: CallbackQuery):
+    weather = await get_weather()
+    await call.message.answer(weather)
+    await call.answer()
 
 
 @router.message(F.text)
