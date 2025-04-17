@@ -34,7 +34,3 @@ async def get_weather():
                 return f"Произошла ошибка"
 
 
-# async def get_currency():
-#     url = ""
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get(url) as response:
