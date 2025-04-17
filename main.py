@@ -154,16 +154,12 @@ async def send_question(user_id: int, q_index: int):
     if q_index >= len(questions):
         score = user_scores.get(user_id, 0)
         await bot.send_message(user_id, f"Викторина окончена! Ваш результат: {score}/{len(questions)}")
+
+        user = await db.check_user(user_id)
+        await db.save_quiz_result(user["id"], score, len(questions))
+
         return
 
-    question = questions[q_index]
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=option, callback_data=f"quiz_{q_index}_{option}")]
-            for option in question["options"]
-        ]
-    )
-    await bot.send_message(user_id, question["question"], reply_markup=keyboard)
 
 
 @router.callback_query(F.data.startswith("quiz_"))
@@ -180,6 +176,14 @@ async def handle_answer(callback: CallbackQuery):
         await callback.answer(f"❌ Неправильно! Правильный ответ: {correct_answer}")
 
     await send_question(user_id, q_index + 1)
+
+
+async def save_quiz_result(self, user_id: int, score: int, total_questions: int):
+    query = """
+        INSERT INTO quiz_results (user_id, score, total_questions)
+        VALUES (%s, %s, %s)
+    """
+    await self.connection.execute(query, (user_id, score, total_questions))
 
 
 

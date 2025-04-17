@@ -51,3 +51,6 @@ class Database:
                 """,
                 user_id, int(age), color
             )
+
+    async def save_quiz_result(self, param, score, param1):
+        pass
